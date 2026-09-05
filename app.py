@@ -11,6 +11,9 @@ import plotly.express as px
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
+import streamlit as st
+
+st.set_page_config(page_title="Semantic Review Intelligence System", page_icon="🔍")
 
 @st.cache_data
 def load_and_process():
