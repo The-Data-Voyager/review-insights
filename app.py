@@ -11,9 +11,11 @@ import plotly.express as px
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
-import streamlit as st
-
-st.set_page_config(page_title="Semantic Review Intelligence System", page_icon="🔍")
+st.set_page_config(
+    page_title="Semantic Review Intelligence System",
+    page_icon="🔎",
+    layout="wide"
+)
 
 @st.cache_data
 def load_and_process():
@@ -97,7 +99,7 @@ for cluster_num in range(num_clusters):
 # ===========================================
 # Page Layout
 # ===========================================
-st.title("Review Insights")
+st.title("Semantic Review Intelligence System")
 st.write("NLP-powered topic discovery and semantic search on 22,000+ clothing reviews")
 
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
