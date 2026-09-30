@@ -21,36 +21,44 @@ def run_kmeans(embeddings, num_clusters=5):
     """
     Run KMeans clustering on embeddings.
     Returns the cluster label for each review.
+    n_init is pinned so the cluster numbering is reproducible across runs.
     """
-    kmeans_model = KMeans(n_clusters=num_clusters, random_state=42)
+    kmeans_model = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
     cluster_labels = kmeans_model.fit_predict(embeddings)
     return cluster_labels
 
 
-def get_cluster_topics(clean_texts, cluster_labels, num_clusters=5):
+def get_cluster_topics(clean_texts, cluster_labels, num_clusters=5, top_n=10):
     """
-    Use TF-IDF to find the top 10 words for each cluster.
+    Find the words that are DISTINCTIVE to each cluster.
+
+    TF-IDF is fitted once on all reviews, then each cluster's average score is
+    compared with the overall average. Fitting a separate TF-IDF inside each
+    cluster only finds words that are common there ("love", "great", "fit",
+    "size" in every cluster), not words that tell the clusters apart.
     """
+    cluster_labels = np.asarray(cluster_labels)
+
+    tfidf = TfidfVectorizer(stop_words="english", min_df=5)
+    tfidf_matrix = tfidf.fit_transform(clean_texts)
+    words = tfidf.get_feature_names_out()
+
+    overall_avg = np.asarray(tfidf_matrix.mean(axis=0)).flatten()
+
     cluster_topics = {}
 
     for cluster_num in range(num_clusters):
 
-        reviews_in_cluster = []
-        for i in range(len(cluster_labels)):
-            if cluster_labels[i] == cluster_num:
-                reviews_in_cluster.append(clean_texts[i])
+        positions = np.where(cluster_labels == cluster_num)[0]
 
-        if len(reviews_in_cluster) == 0:
+        if len(positions) == 0:
             cluster_topics[cluster_num] = ["(empty)"]
             continue
 
-        tfidf = TfidfVectorizer(stop_words="english", max_features=1000)
-        tfidf_matrix = tfidf.fit_transform(reviews_in_cluster)
+        cluster_avg = np.asarray(tfidf_matrix[positions].mean(axis=0)).flatten()
 
-        words = tfidf.get_feature_names_out()
-        avg_scores = tfidf_matrix.mean(axis=0)
-        avg_scores = np.array(avg_scores).flatten()
-        top_positions = np.argsort(avg_scores)[-10:]
+        difference = cluster_avg - overall_avg
+        top_positions = np.argsort(difference)[-top_n:][::-1]
 
         top_words = []
         for pos in top_positions:

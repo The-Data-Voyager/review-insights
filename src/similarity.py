@@ -13,16 +13,12 @@ def find_similar_reviews(input_review, model, clean_texts, clean_embeddings, clu
     """
     input_vector = model.encode(input_review)
 
-    similarities = []
-    for vec in clean_embeddings:
-        sim = cosine_similarity([input_vector], [vec])[0][0]
-        similarities.append(sim)
-
-    indices = np.argsort(similarities)
-    top_indices = indices[-top_n:]
+    # One call on the whole matrix instead of one call per review
+    similarities = cosine_similarity([input_vector], clean_embeddings)[0]
+    top_indices = np.argsort(similarities)[::-1][:top_n]   # best match first
 
     results = []
-    for i in reversed(top_indices):
+    for i in top_indices:
         result = {
             "text": clean_texts[i],
             "score": round(similarities[i], 4),
