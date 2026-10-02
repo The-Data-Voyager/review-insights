@@ -11,7 +11,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
-import umap
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -89,10 +88,31 @@ def generate_all_embeddings(clean_texts):
     return embeddings
 
 
+COORDS_CACHE = "embeddings_2d.npy"
+
+
+def compute_umap(embeddings):
+    # Imported here, not at the top of the file, so a deployment that ships
+    # embeddings_2d.npy does not need umap-learn (and its numba + llvmlite
+    # dependency chain) installed at all.
+    import umap
+
+    reducer = umap.UMAP(n_components=2, random_state=42)
+    coords = np.asarray(reducer.fit_transform(embeddings), dtype=np.float32)
+    np.save(COORDS_CACHE, coords)
+    return coords
+
+
 @st.cache_data
 def run_clustering(embeddings, num_clusters=5):
-    reducer = umap.UMAP(n_components=2, random_state=42)
-    embeddings_2d = reducer.fit_transform(embeddings)
+    # UMAP is only for the picture - the clustering itself runs on all 384
+    # dimensions - so the 2-D coordinates are cached like the embeddings are.
+    if os.path.exists(COORDS_CACHE):
+        cached = np.load(COORDS_CACHE)
+        embeddings_2d = cached if len(cached) == len(embeddings) else compute_umap(embeddings)
+    else:
+        embeddings_2d = compute_umap(embeddings)
+
     # n_init is pinned so the cluster numbering stays put across runs and keeps
     # matching the names below.
     kmeans_model = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)

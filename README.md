@@ -179,9 +179,22 @@ Download the dataset from [Kaggle: Women's Clothing E-Commerce Reviews](https://
 
 ## Setup
 
+To run the app:
+
 ```bash
 pip install -r requirements.txt
 ```
+
+To run the notebook as well (adds `umap-learn` and `gensim`):
+
+```bash
+pip install -r requirements-notebook.txt
+```
+
+`requirements.txt` is what Streamlit Cloud installs, so it stays lean: it pulls
+CPU-only torch (the default PyPI wheel drags in ~2.5 GB of CUDA packages) and leaves
+out `umap-learn`, because the app ships the 2-D coordinates in `embeddings_2d.npy`
+(177 KB) rather than recomputing them.
 
 The notebook caches its two expensive encodes, both gitignored, and the app reuses the
 first one instead of encoding at startup:
@@ -190,6 +203,7 @@ first one instead of encoding at startup:
 |------|------|---------------|
 | `embeddings.npy` | ~33 MB | one vector per review (22,641 × 384) |
 | `sentence_embeddings.npy` | ~170 MB | one vector per sentence (111,864 × 384) |
+| `embeddings_2d.npy` | 177 KB | UMAP coordinates for the cluster map |
 
 Encoding the reviews takes ~16 minutes on CPU; the sentences, being short, take ~4.
 

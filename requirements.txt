@@ -1,10 +1,22 @@
+# Installed by Streamlit Community Cloud.
+#
+# CPU-only torch: the default PyPI torch wheel pulls in ~2.5 GB of nvidia CUDA
+# packages, which is the usual reason a free-tier build dies with
+# "Error installing requirements". The +cpu build sorts higher than the plain
+# version, so pip prefers it from this index.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+streamlit
 pandas
 numpy
-sentence-transformers
-umap-learn
 scikit-learn
 plotly
-streamlit
-wordcloud
 matplotlib
-gensim
+wordcloud
+sentence-transformers
+torch
+
+# Not needed to RUN the app:
+#   umap-learn - only used to build embeddings_2d.npy, which is committed
+#   gensim     - notebook only
+# Both live in requirements-notebook.txt.

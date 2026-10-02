@@ -1,0 +1,5 @@
+# Everything in the app, plus the notebook-only packages.
+-r requirements.txt
+
+umap-learn
+gensim
